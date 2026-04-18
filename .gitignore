@@ -1,0 +1,27 @@
+# Ignore Python bytecode files
+*.pyc
+__pycache__/    
+
+# Ignore environment variables files
+.env
+.venv/
+
+# Ignore media files
+/media/
+
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+/staticfiles/
+
+
+# VSCode settings
+.vscode/
+
+# Ignnore migration files
+*/migrations/
