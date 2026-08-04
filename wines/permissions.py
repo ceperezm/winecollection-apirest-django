@@ -45,5 +45,5 @@ class IsProviderWineOwner(BasePermission):
         return (
             request.user
             and request.user.is_authenticated
-            and obj.provider == request.user
+            and obj.provider_id == request.user.id
         )

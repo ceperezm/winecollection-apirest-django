@@ -1,29 +1,16 @@
 from rest_framework.permissions import BasePermission
-from users.models import Client, Provider
 
 class IsClient(BasePermission):
     message = "User is not a client."
 
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        try:
-            Client.objects.get(user_ptr=request.user)
-            return True
-        except Client.DoesNotExist:
-            return False
+        return bool(request.user and request.user.is_authenticated and hasattr(request.user, 'client'))
 
 class IsProvider(BasePermission):
     message = "User is not a provider."
 
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        try:
-            Provider.objects.get(user_ptr=request.user)
-            return True
-        except Provider.DoesNotExist:
-            return False
+        return bool(request.user and request.user.is_authenticated and hasattr(request.user, 'provider'))
 
 class IsProviderCollectionOwner(BasePermission):
     message = "You do not own this provider collection."
@@ -31,11 +18,9 @@ class IsProviderCollectionOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.is_staff or request.user.is_superuser:
             return True
-        try:
-            Provider.objects.get(user_ptr=request.user)
-            return obj.provider.user_ptr_id == request.user.id
-        except Provider.DoesNotExist:
-            return False
+        if hasattr(request.user, 'provider'):
+            return obj.provider_id == request.user.id
+        return False
 
 class IsClientCollectionOwner(BasePermission):
     message = "You do not own this client collection."
@@ -43,11 +28,9 @@ class IsClientCollectionOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.is_staff or request.user.is_superuser:
             return True
-        try:
-            Client.objects.get(user_ptr=request.user)
-            return obj.client.user_ptr_id == request.user.id
-        except Client.DoesNotExist:
-            return False
+        if hasattr(request.user, 'client'):
+            return obj.client_id == request.user.id
+        return False
 
 class IsClientCollectionWineOwner(BasePermission):
     message = "You do not own this collection wine."
@@ -55,11 +38,9 @@ class IsClientCollectionWineOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.is_staff or request.user.is_superuser:
             return True
-        try:
-            Client.objects.get(user_ptr=request.user)
-            return obj.client_collection.client.user_ptr_id == request.user.id
-        except Client.DoesNotExist:
-            return False
+        if hasattr(request.user, 'client'):
+            return obj.client_collection.client_id == request.user.id
+        return False
 
 class IsProviderCollectionWineOwner(BasePermission):
     message = "You do not own this provider collection wine."
@@ -67,14 +48,11 @@ class IsProviderCollectionWineOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.is_staff or request.user.is_superuser:
             return True
-        try:
-            Provider.objects.get(user_ptr=request.user)
-            return obj.provider_collection.provider.user_ptr_id == request.user.id
-        except Provider.DoesNotExist:
-            return False
+        if hasattr(request.user, 'provider'):
+            return obj.provider_collection.provider_id == request.user.id
+        return False
 
 class CanViewProviderCollection(BasePermission):
-
     """
     Permission to view provider collections based on user role.
     Clients can view all provider collections.
@@ -84,35 +62,16 @@ class CanViewProviderCollection(BasePermission):
     
     def has_permission(self, request, view):
         user = request.user
-        if not user.is_authenticated:
+        if not user or not user.is_authenticated:
             return False
-        # Check if user is Client or Provider
-        try:
-            Client.objects.get(user_ptr=user)
-            return True
-        except Client.DoesNotExist:
-            pass
-        try:
-            Provider.objects.get(user_ptr=user)
-            return True
-        except Provider.DoesNotExist:
-            pass
-        if user.is_staff or user.is_superuser:
+        if hasattr(user, 'client') or hasattr(user, 'provider') or user.is_staff or user.is_superuser:
             return True
         return False
 
     def has_object_permission(self, request, view, obj):
         user = request.user
-        # Check if user is Client
-        try:
-            Client.objects.get(user_ptr=user)
+        if hasattr(user, 'client'):
             return True
-        except Client.DoesNotExist:
-            pass
-        # Check if user is Provider
-        try:
-            Provider.objects.get(user_ptr=user)
-            return obj.provider.user_ptr_id == user.id
-        except Provider.DoesNotExist:
-            pass
+        if hasattr(user, 'provider'):
+            return obj.provider_id == user.id
         return False

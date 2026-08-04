@@ -28,7 +28,10 @@ from .permissions import (
     CanViewProviderCollection,
 )
 
+from drf_spectacular.utils import extend_schema
+
 # Provider collections
+@extend_schema(tags=['Collections - Providers'])
 class ProviderCollectionViewSet(viewsets.ModelViewSet):
     serializer_class = ProviderCollectionReadSerializer
 
@@ -38,11 +41,11 @@ class ProviderCollectionViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             return ProviderCollection.objects.none()
 
-        if isinstance(user, Client):
+        if hasattr(user, 'client'):
             return ProviderCollection.objects.all()
 
-        if isinstance(user, Provider):
-            return ProviderCollection.objects.select_related('provider').filter(provider=user)
+        if hasattr(user, 'provider'):
+            return ProviderCollection.objects.select_related('provider').filter(provider_id=user.id)
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -61,6 +64,7 @@ class ProviderCollectionViewSet(viewsets.ModelViewSet):
         serializer.save()
 
 # Client collections
+@extend_schema(tags=['Collections - Clients'])
 class ClientCollectionViewSet(viewsets.ModelViewSet):
     serializer_class = ClientCollectionReadSerializer
 
@@ -84,6 +88,7 @@ class ClientCollectionViewSet(viewsets.ModelViewSet):
         serializer.save()
 
 # Client collection wines
+@extend_schema(tags=['Collections - Clients (Wines)'])
 class ClientCollectionWineViewSet(viewsets.ModelViewSet):
     serializer_class = ClientCollectionWineSerializer
 
@@ -92,10 +97,10 @@ class ClientCollectionWineViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             return ClientCollectionWine.objects.none()
 
-        if isinstance(user, Client):
-            return ClientCollectionWine.objects.all()
+        if hasattr(user, 'client'):
+            return ClientCollectionWine.objects.filter(client_collection__client_id=user.id)
 
-        if isinstance(user, Provider):
+        if hasattr(user, 'provider'):
             return ClientCollectionWine.objects.none()
 
     def get_permissions(self):
@@ -107,6 +112,7 @@ class ClientCollectionWineViewSet(viewsets.ModelViewSet):
 
 
 # Provider collection wines
+@extend_schema(tags=['Collections - Providers (Wines)'])
 class ProviderCollectionWineViewSet(viewsets.ModelViewSet):
     serializer_class = ProviderCollectionWineSerializer
 
@@ -115,11 +121,11 @@ class ProviderCollectionWineViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             return ProviderCollectionWine.objects.none()
 
-        if isinstance(user, Client):
+        if hasattr(user, 'client'):
             return ProviderCollectionWine.objects.all()
 
-        if isinstance(user, Provider):
-            return ProviderCollectionWine.objects.filter(provider_collection__provider=user)
+        if hasattr(user, 'provider'):
+            return ProviderCollectionWine.objects.filter(provider_collection__provider_id=user.id)
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:

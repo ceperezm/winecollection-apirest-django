@@ -8,18 +8,12 @@ class CanViewComment(permissions.BasePermission):
         user = request.user
 
         # Check if user is a Client
-        try:
-            Client.objects.get(user_ptr=user)
+        if hasattr(user, 'client'):
             return True
-        except Client.DoesNotExist:
-            pass
 
         # Check if user is a Provider
-        try:
-            Provider.objects.get(user_ptr=user)
+        if hasattr(user, 'provider'):
             return True
-        except Provider.DoesNotExist:
-            pass
 
         return False    
 

@@ -177,6 +177,7 @@ class ProviderRegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('password2')
         password = validated_data.pop('password1')
         provider = Provider(**validated_data)
+        provider.username = validated_data.get('email') # Use email as username
         provider.set_password(password)
         provider.save()
         return provider

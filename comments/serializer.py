@@ -35,6 +35,15 @@ class WineCommentWriteSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        request = self.context.get('request')
+        user = request.user
+        wine = data.get('wine')
+        
+        # Only allow one comment per wine per client (in creation)
+        if not self.instance and wine:
+            if WineComment.objects.filter(client__user_ptr=user, wine=wine).exists():
+                raise serializers.ValidationError("You have already commented on this wine.")
+                
         return data
     
     def create(self, validated_data):
@@ -84,10 +93,16 @@ class ClientCollectionWriteCommentSerializer(serializers.ModelSerializer):
         collection = data.get('collection')
         
         # Compare user_ptr IDs since user is User and collection.client is Client
-        if user.id == collection.client.user_ptr_id:
+        if collection and user.id == collection.client_id:
             raise serializers.ValidationError(
                 "Client cannot comment on their own collection."
             )
+            
+        # Solo permitir un comentario por colección por cliente (en la creación)
+        if not self.instance and collection:
+            if ClientCollectionComment.objects.filter(client__user_ptr=user, collection=collection).exists():
+                raise serializers.ValidationError("You have already commented on this collection.")
+                
         return data
     
     def create(self, validated_data):
