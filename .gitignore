@@ -25,3 +25,5 @@ db.sqlite3
 
 # Ignnore migration files
 */migrations/
+
+tests/

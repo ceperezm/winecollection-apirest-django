@@ -5,7 +5,9 @@ from rest_framework.permissions import AllowAny
 from .models import Wine
 from .serializer import (WineReadSerializer, WineWriteSerializer)
 from .permissions import IsClient, IsProvider, IsProviderWineOwner
+from drf_spectacular.utils import extend_schema
 
+@extend_schema(tags=['Wines'])
 class WineProviderViewSet(viewsets.ModelViewSet):
     """
     ViewSet for providers to manage their own wines.
@@ -29,6 +31,7 @@ class WineProviderViewSet(viewsets.ModelViewSet):
             return WineWriteSerializer
         return WineReadSerializer
     
+@extend_schema(tags=['Wines'])
 class WineClientViewSet(viewsets.ReadOnlyModelViewSet):
     """View set for clients to view wines."""
     serializer_class = WineReadSerializer
@@ -43,6 +46,7 @@ class WineClientViewSet(viewsets.ReadOnlyModelViewSet):
             return [ IsClient()]
         return [IsClient()]
     
+@extend_schema(tags=['Wines'])
 class WinePublicListView(generics.ListAPIView):
     """Public view to list wines."""
     queryset = Wine.objects.all()

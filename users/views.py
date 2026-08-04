@@ -3,13 +3,14 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.decorators import action
-
+from drf_spectacular.utils import extend_schema
 from .models import Client, Provider
 from .permissions import IsClient, IsProvider, IsOwner, CanViewUserProfile
 from .serializer import (ClientLoginSerializer, CustomClientDetailSerializer,
                          CustomProviderDetailSerializer,ProviderLoginSerializer,ClientRegisterSerializer,
                          ProviderRegisterSerializer)
 
+@extend_schema(tags=['Users - Clients'])
 class ClientViewSet(viewsets.ModelViewSet):
     """Client view set."""
     serializer_class = CustomClientDetailSerializer
@@ -49,6 +50,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
         
+@extend_schema(tags=['Users - Providers'])
 class ProviderViewSet(viewsets.ModelViewSet):
     """Provider view set."""
     serializer_class = CustomProviderDetailSerializer
@@ -94,6 +96,7 @@ class ProviderViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
         
+@extend_schema(tags=['Auth'])
 class ClientRegisterView(generics.CreateAPIView):
     """Client registration view."""
     serializer_class = ClientRegisterSerializer
@@ -111,6 +114,7 @@ class ClientRegisterView(generics.CreateAPIView):
             'user': CustomClientDetailSerializer(client).data
         }, status=status.HTTP_201_CREATED)  
         
+@extend_schema(tags=['Auth'])
 class ProviderRegisterView(generics.CreateAPIView):
     """Provider registration view."""
     serializer_class = ProviderRegisterSerializer
@@ -128,6 +132,7 @@ class ProviderRegisterView(generics.CreateAPIView):
             'user': CustomProviderDetailSerializer(provider).data
         }, status=status.HTTP_201_CREATED)
         
+@extend_schema(tags=['Auth'])
 class ClientLoginView(generics.GenericAPIView):
     """Client login view."""
     serializer_class = ClientLoginSerializer
@@ -147,6 +152,7 @@ class ClientLoginView(generics.GenericAPIView):
         }, status=status.HTTP_200_OK)
         
         
+@extend_schema(tags=['Auth'])
 class ProviderLoginView(generics.GenericAPIView):
     """Provider login view."""
     serializer_class = ProviderLoginSerializer

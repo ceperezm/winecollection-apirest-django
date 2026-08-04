@@ -11,8 +11,11 @@ from .serializer import (WineCommentReadSerializer,WineCommentWriteSerializer,
 ClientCollectionReadCommentSerializer,ClientCollectionWriteCommentSerializer
 )
 
+from drf_spectacular.utils import extend_schema
+
 # Wine comments
 
+@extend_schema(tags=['Comments - Wines'])
 class WineCommentViewSet(viewsets.ModelViewSet):
     
     permission_classes = [IsAuthenticated]
@@ -63,6 +66,7 @@ class WineCommentViewSet(viewsets.ModelViewSet):
         serializer.save()
             
     
+@extend_schema(tags=['Comments - Client Collections'])
 class ClientCollectionCommentViewSet(viewsets.ModelViewSet):
     queryset = ClientCollectionComment.objects.all()
     permission_classes = [IsAuthenticated]
