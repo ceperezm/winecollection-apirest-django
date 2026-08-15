@@ -9,11 +9,13 @@ from .permissions import IsClient, IsProvider, IsOwner, CanViewUserProfile
 from .serializer import (ClientLoginSerializer, CustomClientDetailSerializer,
                          CustomProviderDetailSerializer,ProviderLoginSerializer,ClientRegisterSerializer,
                          ProviderRegisterSerializer)
+from wine_collection_api.pagination import ProviderPagination
 
 @extend_schema(tags=['Users - Clients'])
 class ClientViewSet(viewsets.ModelViewSet):
     """Client view set."""
     serializer_class = CustomClientDetailSerializer
+    pagination_class = None
     
     def get_queryset(self):
         return Client.objects.all()
@@ -54,6 +56,7 @@ class ClientViewSet(viewsets.ModelViewSet):
 class ProviderViewSet(viewsets.ModelViewSet):
     """Provider view set."""
     serializer_class = CustomProviderDetailSerializer
+    pagination_class = ProviderPagination
     
     def get_queryset(self):
         """

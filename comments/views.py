@@ -4,21 +4,22 @@ from users.models import Provider, Client
 from .permissions import CanViewComment
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, serializers
-
+import django_filters.rest_framework
+from wine_collection_api.pagination import CommentPagination
+from drf_spectacular.utils import extend_schema
 
 from .models import WineComment, ClientCollectionComment
 from .serializer import (WineCommentReadSerializer,WineCommentWriteSerializer,
 ClientCollectionReadCommentSerializer,ClientCollectionWriteCommentSerializer
 )
 
-from drf_spectacular.utils import extend_schema
 
 # Wine comments
-
 @extend_schema(tags=['Comments - Wines'])
 class WineCommentViewSet(viewsets.ModelViewSet):
-    
-    permission_classes = [IsAuthenticated]
+    pagination_class = CommentPagination
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_fields = ['wine']
 
     def get_queryset(self):
         user = self.request.user
@@ -29,14 +30,14 @@ class WineCommentViewSet(viewsets.ModelViewSet):
         # Check if user is a Client by looking for Client instance
         try:
             Client.objects.get(user_ptr=user)
-            return WineComment.objects.select_related('wine','client')
+            return WineComment.objects.select_related('wine', 'client')
         except Client.DoesNotExist:
             pass
 
         # Check if user is a Provider by looking for Provider instance
         try:
             Provider.objects.get(user_ptr=user)
-            return WineComment.objects.filter(wine__provider=user).select_related('wine','client')
+            return WineComment.objects.filter(wine__provider=user).select_related('wine', 'client')
         except Provider.DoesNotExist:
             pass
 
@@ -44,50 +45,51 @@ class WineCommentViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Docstring for get_permissions
-        
-        :param self: Description
+        Returns the list of permissions depending on the action being performed.
+
+        :param self: ViewSet instance
         """
         if self.action == 'list':
             return [IsAuthenticated()]
         elif self.action == 'retrieve':
             return [CanViewComment()]
         elif self.action in ['create', 'update', 'partial_update']:
-            return [IsClient(),IsOwner()]
+            return [IsClient(), IsOwner()]
         return [IsAuthenticated()]
-
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
             return WineCommentWriteSerializer
         return WineCommentReadSerializer
-    def perform_create(self,serializer):
+
+    def perform_create(self, serializer):
         # Serializer now handles User to Client conversion
         serializer.save()
-            
-    
+
 @extend_schema(tags=['Comments - Client Collections'])
 class ClientCollectionCommentViewSet(viewsets.ModelViewSet):
     queryset = ClientCollectionComment.objects.all()
     permission_classes = [IsAuthenticated]
+    pagination_class = CommentPagination
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_fields = ['collection']
 
     def get_permissions(self):
         """
-        Docstring for get_permissions
-        
-        :param self: Description
+        Returns the list of permissions depending on the action being performed.
+
+        :param self: ViewSet instance
         """
-        if self.action in ['list','retrieve']:
+        if self.action in ['list', 'retrieve']:
             return [IsClient()]
         elif self.action in ['create', 'update', 'partial_update']:
-            return [IsClient(),IsOwner()]
+            return [IsClient(), IsOwner()]
         return [IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
             return ClientCollectionWriteCommentSerializer
         return ClientCollectionReadCommentSerializer
-
 
     def perform_create(self, serializer):
         # Serializer now handles User to Client conversion

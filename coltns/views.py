@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from users.models import Client, Provider
+import django_filters.rest_framework
 
 from .models import (
     ProviderCollection,
@@ -28,31 +29,32 @@ from .permissions import (
     CanViewProviderCollection,
 )
 
+from wine_collection_api.pagination import CollectionPagination
 from drf_spectacular.utils import extend_schema
 
 # Provider collections
 @extend_schema(tags=['Collections - Providers'])
 class ProviderCollectionViewSet(viewsets.ModelViewSet):
     serializer_class = ProviderCollectionReadSerializer
+    pagination_class = CollectionPagination
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_fields = ['provider']
 
     def get_queryset(self):
-
         user = self.request.user
         if not user.is_authenticated:
             return ProviderCollection.objects.none()
-
         if hasattr(user, 'client'):
             return ProviderCollection.objects.all()
-
         if hasattr(user, 'provider'):
             return ProviderCollection.objects.select_related('provider').filter(provider_id=user.id)
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
-            return [CanViewProviderCollection()]  # clients can see all collections, providers can view all but only modify their own
+            return [CanViewProviderCollection()]
         elif self.action in ["update", "partial_update", "destroy"]:
-            return [IsProvider(), IsProviderCollectionOwner()]  # only providers can modify their own
-        return [IsAuthenticated()] 
+            return [IsProvider(), IsProviderCollectionOwner()]
+        return [IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -60,16 +62,20 @@ class ProviderCollectionViewSet(viewsets.ModelViewSet):
         return ProviderCollectionReadSerializer
 
     def perform_create(self, serializer):
-        # Serializer now handles User to Provider conversion
         serializer.save()
 
 # Client collections
 @extend_schema(tags=['Collections - Clients'])
 class ClientCollectionViewSet(viewsets.ModelViewSet):
     serializer_class = ClientCollectionReadSerializer
+    pagination_class = CollectionPagination
 
     def get_queryset(self):
-        return ClientCollection.objects.all()
+        """Solo devuelve las colecciones del cliente autenticado."""
+        user = self.request.user
+        if not user.is_authenticated:
+            return ClientCollection.objects.none()
+        return ClientCollection.objects.filter(client_id=user.id)
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -84,22 +90,22 @@ class ClientCollectionViewSet(viewsets.ModelViewSet):
         return ClientCollectionReadSerializer
 
     def perform_create(self, serializer):
-        # Serializer now handles User to Client conversion
         serializer.save()
 
-# Client collection wines
+# Client collection wines — sin paginación, se filtra por colección
 @extend_schema(tags=['Collections - Clients (Wines)'])
 class ClientCollectionWineViewSet(viewsets.ModelViewSet):
     serializer_class = ClientCollectionWineSerializer
+    pagination_class = None
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_fields = ['client_collection']
 
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated:
             return ClientCollectionWine.objects.none()
-
         if hasattr(user, 'client'):
             return ClientCollectionWine.objects.filter(client_collection__client_id=user.id)
-
         if hasattr(user, 'provider'):
             return ClientCollectionWine.objects.none()
 
@@ -111,19 +117,20 @@ class ClientCollectionWineViewSet(viewsets.ModelViewSet):
         return [IsClient()]
 
 
-# Provider collection wines
+# Provider collection wines — sin paginación, se filtra por colección
 @extend_schema(tags=['Collections - Providers (Wines)'])
 class ProviderCollectionWineViewSet(viewsets.ModelViewSet):
     serializer_class = ProviderCollectionWineSerializer
+    pagination_class = None
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_fields = ['provider_collection']
 
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated:
             return ProviderCollectionWine.objects.none()
-
         if hasattr(user, 'client'):
             return ProviderCollectionWine.objects.all()
-
         if hasattr(user, 'provider'):
             return ProviderCollectionWine.objects.filter(provider_collection__provider_id=user.id)
 

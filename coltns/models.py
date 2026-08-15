@@ -10,7 +10,7 @@ class ProviderCollection(models.Model):
     collection_name = models.CharField(max_length=100)
     description = models.TextField()
     registration_date = models.DateField(auto_now_add=True) # Date when the collection was created
-    provider = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'provider'}, null=True, blank=True) # Foreign key relationship to User model with provider role
+    provider = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'provider__isnull': False}, null=True, blank=True) # Foreign key relationship to User model with provider role
     type = models.ForeignKey('Type', on_delete=models.CASCADE, null=True, blank=True) # Foreign key relationship to Type model
     
     def __str__(self):
@@ -21,7 +21,7 @@ class ClientCollection(models.Model):
     collection_name = models.CharField(max_length=100)
     description = models.TextField()
     registration_date = models.DateField(auto_now_add=True) # Date when the collection was created
-    client = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'client'}, null=True, blank=True) # Foreign key relationship to User model with client role
+    client = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'client__isnull': False}, null=True, blank=True) # Foreign key relationship to User model with client role
     
     def __str__(self):
         return self.collection_name # Return the collection name as the string representation of the ClientCollection model    
