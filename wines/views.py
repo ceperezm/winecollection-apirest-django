@@ -16,8 +16,14 @@ class WineProviderViewSet(viewsets.ModelViewSet):
     """
     serializer_class = WineReadSerializer
     pagination_class = StandardPagination
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filter_backends = [
+        django_filters.rest_framework.DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
     filterset_fields = ['variety', 'harvest_year']
+    search_fields = ['name', 'variety', 'maker']
+    ordering_fields = ['name', 'harvest_year']
 
     def get_queryset(self):
         """Get queryset for providers wines."""

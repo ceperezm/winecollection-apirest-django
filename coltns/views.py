@@ -2,6 +2,8 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from users.models import Client, Provider
 import django_filters.rest_framework
+from rest_framework import filters
+from django.db.models import Count
 
 from .models import (
     ProviderCollection,
@@ -37,17 +39,21 @@ from drf_spectacular.utils import extend_schema
 class ProviderCollectionViewSet(viewsets.ModelViewSet):
     serializer_class = ProviderCollectionReadSerializer
     pagination_class = CollectionPagination
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['provider']
+    search_fields = ['collection_name', 'description']
+    ordering_fields = ['registration_date', 'collection_name', 'wines_count']
 
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated:
             return ProviderCollection.objects.none()
+        
+        queryset = ProviderCollection.objects.annotate(wines_count=Count('providercollectionwine'))
         if hasattr(user, 'client'):
-            return ProviderCollection.objects.all()
+            return queryset.filter(is_public=True)
         if hasattr(user, 'provider'):
-            return ProviderCollection.objects.select_related('provider').filter(provider_id=user.id)
+            return queryset.select_related('provider').filter(provider_id=user.id)
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -69,13 +75,17 @@ class ProviderCollectionViewSet(viewsets.ModelViewSet):
 class ClientCollectionViewSet(viewsets.ModelViewSet):
     serializer_class = ClientCollectionReadSerializer
     pagination_class = CollectionPagination
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['collection_name', 'description']
+    ordering_fields = ['registration_date', 'collection_name', 'wines_count']
 
     def get_queryset(self):
-        """Solo devuelve las colecciones del cliente autenticado."""
+        """Returns the client collections (all if client, none if provider)."""
         user = self.request.user
-        if not user.is_authenticated:
+        if not user.is_authenticated or hasattr(user, 'provider'):
             return ClientCollection.objects.none()
-        return ClientCollection.objects.filter(client_id=user.id)
+        
+        return ClientCollection.objects.filter(client_id=user.id).annotate(wines_count=Count('clientcollectionwine'))
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -92,7 +102,7 @@ class ClientCollectionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
-# Client collection wines — sin paginación, se filtra por colección
+# Client collection wines — no pagination, filtered by collection
 @extend_schema(tags=['Collections - Clients (Wines)'])
 class ClientCollectionWineViewSet(viewsets.ModelViewSet):
     serializer_class = ClientCollectionWineSerializer
@@ -117,7 +127,7 @@ class ClientCollectionWineViewSet(viewsets.ModelViewSet):
         return [IsClient()]
 
 
-# Provider collection wines — sin paginación, se filtra por colección
+# Provider collection wines — no pagination, filtered by collection
 @extend_schema(tags=['Collections - Providers (Wines)'])
 class ProviderCollectionWineViewSet(viewsets.ModelViewSet):
     serializer_class = ProviderCollectionWineSerializer
@@ -130,7 +140,7 @@ class ProviderCollectionWineViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             return ProviderCollectionWine.objects.none()
         if hasattr(user, 'client'):
-            return ProviderCollectionWine.objects.all()
+            return ProviderCollectionWine.objects.filter(provider_collection__is_public=True)
         if hasattr(user, 'provider'):
             return ProviderCollectionWine.objects.filter(provider_collection__provider_id=user.id)
 

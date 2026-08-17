@@ -12,6 +12,7 @@ class ProviderCollection(models.Model):
     registration_date = models.DateField(auto_now_add=True) # Date when the collection was created
     provider = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'provider__isnull': False}, null=True, blank=True) # Foreign key relationship to User model with provider role
     type = models.ForeignKey('Type', on_delete=models.CASCADE, null=True, blank=True) # Foreign key relationship to Type model
+    is_public = models.BooleanField(default=True) # Boolean field to determine if the collection is public or private
     
     def __str__(self):
         return self.collection_name # Return the collection name as the string representation of the ProviderCollection model
