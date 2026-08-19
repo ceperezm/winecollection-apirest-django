@@ -1,13 +1,12 @@
 from django.urls import path, include
 from rest_framework import routers
-from wines import views
-
+from .views import WineProviderViewSet, WineClientViewSet, WinePublicViewSet
 
 router = routers.DefaultRouter()
-router.register(r'provider-wines', views.WineProviderViewSet, 'provider-wines')
-router.register(r'client-wines', views.WineClientViewSet, 'client-wines')
+router.register(r'provider-wine', WineProviderViewSet, basename='provider-wine')
+router.register(r'client-wine', WineClientViewSet, basename='client-wine')
+router.register(r'public-wines', WinePublicViewSet, basename='public-wines')
 
 urlpatterns = [
-    path("api/v1/", include(router.urls)),
-    path("api/v1/public-wines/", views.WinePublicListView.as_view(), name='public-wines'),
+    path('api/v1/', include(router.urls)),
 ]

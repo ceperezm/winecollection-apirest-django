@@ -19,7 +19,7 @@ class ProviderCollectionReadSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ProviderCollection
-        fields = ['id', 'collection_name', 'description', 'registration_date', 'provider', 'type', 'wines_count']
+        fields = ['id', 'collection_name', 'description', 'registration_date', 'provider', 'type', 'wines_count', 'is_public']
     def get_wines_count(self, obj):
         return obj.providercollectionwine_set.count()
         
@@ -34,7 +34,7 @@ class ProviderCollectionWriteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ProviderCollection
-        fields = ['id', 'collection_name', 'description', 'provider_id', 'type_id', 'registration_date']
+        fields = ['id', 'collection_name', 'description', 'provider_id', 'type_id', 'registration_date', 'is_public']
         read_only_fields = ['id', 'registration_date']
         
     def validate_collection_name(self, value):
