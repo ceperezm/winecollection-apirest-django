@@ -1,4 +1,6 @@
 from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from users.models import Client, Provider
 import django_filters.rest_framework
@@ -76,6 +78,7 @@ class ClientCollectionViewSet(viewsets.ModelViewSet):
     serializer_class = ClientCollectionReadSerializer
     pagination_class = CollectionPagination
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['client']
     search_fields = ['collection_name', 'description']
     ordering_fields = ['registration_date', 'collection_name', 'wines_count']
 
@@ -85,7 +88,7 @@ class ClientCollectionViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated or hasattr(user, 'provider'):
             return ClientCollection.objects.none()
         
-        return ClientCollection.objects.filter(client_id=user.id).annotate(wines_count=Count('clientcollectionwine'))
+        return ClientCollection.objects.all().annotate(wines_count=Count('clientcollectionwine'))
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -102,6 +105,18 @@ class ClientCollectionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, IsClient])
+    def me(self, request):
+        user = self.request.user
+        queryset = ClientCollection.objects.filter(client_id=user.id).annotate(wines_count=Count('clientcollectionwine'))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
 # Client collection wines — no pagination, filtered by collection
 @extend_schema(tags=['Collections - Clients (Wines)'])
 class ClientCollectionWineViewSet(viewsets.ModelViewSet):
@@ -115,6 +130,8 @@ class ClientCollectionWineViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             return ClientCollectionWine.objects.none()
         if hasattr(user, 'client'):
+            if self.request.query_params.get('client_collection'):
+                return ClientCollectionWine.objects.all()
             return ClientCollectionWine.objects.filter(client_collection__client_id=user.id)
         if hasattr(user, 'provider'):
             return ClientCollectionWine.objects.none()

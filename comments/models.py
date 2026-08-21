@@ -40,3 +40,22 @@ class ClientCollectionComment(models.Model): # For clients comments Other client
     
     def __str__(self):
         return f"Comment by {self.client.username} on {self.collection.collection_name}"
+
+class ProviderCollectionComment(models.Model): # For clients comments on provider collections
+    """Model to store comments for provider collections."""
+    client = models.ForeignKey(
+        Client, 
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+
+    collection = models.ForeignKey(
+        'coltns.ProviderCollection', on_delete=models.CASCADE,
+    )
+
+    comment = models.TextField(max_length=250)
+    comment_date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Comment by {self.client.username} on {self.collection.collection_name}"

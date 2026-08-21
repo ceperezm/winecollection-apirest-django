@@ -15,14 +15,15 @@ class ProviderCollectionReadSerializer(serializers.ModelSerializer):
     """Serializer for reading ProviderCollection data."""
     type = TypeSerializer(read_only=True)
     provider = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    provider_id = serializers.ReadOnlyField(source='provider.id')
     wines_count = serializers.SerializerMethodField()
     
     class Meta:
         model = ProviderCollection
-        fields = ['id', 'collection_name', 'description', 'registration_date', 'provider', 'type', 'wines_count', 'is_public']
+        fields = ['id', 'collection_name', 'description', 'registration_date', 'provider', 'provider_id', 'type', 'wines_count', 'is_public']
     def get_wines_count(self, obj):
         return obj.providercollectionwine_set.count()
-        
+
 class ProviderCollectionWriteSerializer(serializers.ModelSerializer):
     """Serializer for creating and updating ProviderCollection data."""
     type_id = serializers.PrimaryKeyRelatedField(
@@ -59,10 +60,11 @@ class ProviderCollectionWriteSerializer(serializers.ModelSerializer):
 class ClientCollectionReadSerializer(serializers.ModelSerializer):
     """Serializer for reading ClientCollection data."""
     client = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    client_id = serializers.ReadOnlyField(source='client.id')
     wines_count = serializers.SerializerMethodField()
     class Meta:
         model = ClientCollection
-        fields = ['id', 'collection_name', 'description', 'registration_date', 'client', 'wines_count']
+        fields = ['id', 'collection_name', 'description', 'registration_date', 'client', 'client_id', 'wines_count']
         
     def get_wines_count(self, obj):
         return obj.clientcollectionwine_set.count()

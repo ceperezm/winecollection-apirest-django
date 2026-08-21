@@ -60,6 +60,8 @@ class WineClientViewSet(viewsets.ReadOnlyModelViewSet):
             return [IsClient()]
         return [IsClient()]
 
+from .filters import WineFilter
+
 @extend_schema(tags=['Wines'])
 class WinePublicViewSet(viewsets.ReadOnlyModelViewSet):
     """Public view to list and retrieve wines."""
@@ -72,7 +74,7 @@ class WinePublicViewSet(viewsets.ReadOnlyModelViewSet):
         filters.SearchFilter,
         filters.OrderingFilter,
     ]
-    filterset_fields = ['variety', 'harvest_year', 'provider']
+    filterset_class = WineFilter
     search_fields = ['name', 'variety', 'maker']
     ordering_fields = ['name', 'harvest_year', 'added_date']
                 
