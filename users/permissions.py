@@ -4,13 +4,13 @@ class IsClient(permissions.BasePermission):
     """Permission to check if the user is a client."""
     message = "User is not a client to access this resource."
     def has_permission(self, request, view):
-         return (request.user.is_authenticated and request.user.client is not None)
+        return (request.user.is_authenticated and hasattr(request.user, 'client'))
      
 class IsProvider(permissions.BasePermission):
     """Permission to check if the user is a provider."""
     message = "User is not a provider to access this resource."
     def has_permission(self, request, view):
-         return (request.user.is_authenticated and request.user.provider is not None)
+        return (request.user.is_authenticated and hasattr(request.user, 'provider'))
           
 class IsOwner(permissions.BasePermission):
     """Permission to check if the user is the owner of the object."""
@@ -31,9 +31,9 @@ class CanViewUserProfile(permissions.BasePermission):
         if user.is_staff or user.is_superuser:
             return True
 
-        if user.client:
+        if hasattr(user, 'client'):
             return True 
-        if user.provider:
+        if hasattr(user, 'provider'):
             return obj == user      
 
         return False

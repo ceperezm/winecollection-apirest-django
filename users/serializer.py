@@ -11,6 +11,18 @@ class CustomClientDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'birth_date', 'registration_date', 'email', 'is_active']
         read_only_fields = ['id','first_name', 'last_name','registration_date','is_active']
     
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if request.user.id != instance.id:
+                ret.pop('email', None)
+                ret.pop('birth_date', None)
+        else:
+            ret.pop('email', None)
+            ret.pop('birth_date', None)
+        return ret
+    
     def validate_username(self,value):
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("A user is already registered with this username.")

@@ -5,6 +5,7 @@ from comments import views
 router = routers.DefaultRouter()
 router.register(r'wine-comment',views.WineCommentViewSet,'wine-comment')
 router.register(r'client-collection-comment',views.ClientCollectionCommentViewSet,'client-collection-comment')
+router.register(r'provider-collection-comment', views.ProviderCollectionCommentViewSet, 'provider-collection-comment')
 
 urlpatterns = [
     path("api/v1/", include(router.urls))

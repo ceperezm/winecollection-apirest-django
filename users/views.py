@@ -9,6 +9,8 @@ from .permissions import IsClient, IsProvider, IsOwner, CanViewUserProfile
 from .serializer import (ClientLoginSerializer, CustomClientDetailSerializer,
                          CustomProviderDetailSerializer,ProviderLoginSerializer,ClientRegisterSerializer,
                          ProviderRegisterSerializer)
+import django_filters.rest_framework
+from rest_framework import filters
 from wine_collection_api.pagination import ProviderPagination
 
 @extend_schema(tags=['Users - Clients'])
@@ -16,47 +18,52 @@ class ClientViewSet(viewsets.ModelViewSet):
     """Client view set."""
     serializer_class = CustomClientDetailSerializer
     pagination_class = None
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['username', 'first_name', 'last_name']
     
     def get_queryset(self):
-        return Client.objects.all()
-    
+        """
+        Docstring for get_queryset
+        """
+        return Client.objects.all().order_by('?')
+
     def get_permissions(self):
         """
         Docstring for get_permissions
-        
-        :param self: Description
         """
-        if self.action in ['list','retrieve'] :
-            return [IsClient()]
+        if self.action in ['list', 'retrieve']:
+            return [CanViewUserProfile()]  # clients see all, providers see only their own
         elif self.action == 'create':
             return [IsAdminUser()]
-
         elif self.action in ['update', 'partial_update', 'destroy']:
-            return [IsClient(), IsOwner()]
-        
+            return [IsClient(), IsOwner()]  # only client can modify their own
         return [IsClient()]
-    
+
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, IsClient])
     def me(self, request):
-        """Get current client details."""
-        client = request.user.client
+        user = request.user
+        client = Client.objects.get(id=user.id)
         serializer = self.get_serializer(client)
         return Response(serializer.data)
-    
+
     @action(detail=False, methods=['patch'], permission_classes=[IsAuthenticated, IsClient])
     def update_me(self, request):
-        """Update current client details."""
-        client = request.user.client
+        user = request.user
+        client = Client.objects.get(id=user.id)
         serializer = self.get_serializer(client, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 @extend_schema(tags=['Users - Providers'])
 class ProviderViewSet(viewsets.ModelViewSet):
     """Provider view set."""
     serializer_class = CustomProviderDetailSerializer
     pagination_class = ProviderPagination
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['registration_date']
     
     def get_queryset(self):
         """
