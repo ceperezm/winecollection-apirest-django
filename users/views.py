@@ -25,7 +25,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         """
         Docstring for get_queryset
         """
-        return Client.objects.all().order_by('?')
+        return Client.objects.all().order_by('-registration_date', 'username')
 
     def get_permissions(self):
         """
@@ -71,7 +71,7 @@ class ProviderViewSet(viewsets.ModelViewSet):
         
         :param self: Description
         """
-        return Provider.objects.all()
+        return Provider.objects.all().order_by('-registration_date', 'name')
 
     def get_permissions(self):
         """

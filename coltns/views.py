@@ -50,8 +50,8 @@ class ProviderCollectionViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             return ProviderCollection.objects.none()
-        
-        queryset = ProviderCollection.objects.annotate(wines_count=Count('providercollectionwine'))
+
+        queryset = ProviderCollection.objects.annotate(wines_count=Count('providercollectionwine')).order_by('-registration_date', 'collection_name')
         if hasattr(user, 'client'):
             return queryset.filter(is_public=True)
         if hasattr(user, 'provider'):
@@ -88,7 +88,7 @@ class ClientCollectionViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated or hasattr(user, 'provider'):
             return ClientCollection.objects.none()
         
-        return ClientCollection.objects.all().annotate(wines_count=Count('clientcollectionwine'))
+        return ClientCollection.objects.all().annotate(wines_count=Count('clientcollectionwine')).order_by('-registration_date', 'collection_name')
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -108,7 +108,7 @@ class ClientCollectionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, IsClient])
     def me(self, request):
         user = self.request.user
-        queryset = ClientCollection.objects.filter(client_id=user.id).annotate(wines_count=Count('clientcollectionwine'))
+        queryset = ClientCollection.objects.filter(client_id=user.id).annotate(wines_count=Count('clientcollectionwine')).order_by('-registration_date', 'collection_name')
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

@@ -11,6 +11,7 @@ class User(AbstractUser):
 
     class Meta:
         db_table = 'users_user'
+        ordering = ['-registration_date', 'username']
 
 
 class Client(User):
@@ -19,6 +20,7 @@ class Client(User):
 
     class Meta:
         db_table = 'users_client'
+        ordering = ['-registration_date', 'username']
 
 
 class Provider(User):
@@ -30,3 +32,4 @@ class Provider(User):
 
     class Meta:
         db_table = 'users_provider'
+        ordering = ['-registration_date', 'name']

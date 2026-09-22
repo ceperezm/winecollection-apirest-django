@@ -31,14 +31,14 @@ class WineCommentViewSet(viewsets.ModelViewSet):
         # Check if user is a Client by looking for Client instance
         try:
             Client.objects.get(user_ptr=user)
-            return WineComment.objects.select_related('wine', 'client')
+            return WineComment.objects.select_related('wine', 'client').order_by('-comment_date')
         except Client.DoesNotExist:
             pass
 
         # Check if user is a Provider by looking for Provider instance
         try:
             Provider.objects.get(user_ptr=user)
-            return WineComment.objects.filter(wine__provider=user).select_related('wine', 'client')
+            return WineComment.objects.filter(wine__provider=user).select_related('wine', 'client').order_by('-comment_date')
         except Provider.DoesNotExist:
             pass
 
@@ -69,7 +69,7 @@ class WineCommentViewSet(viewsets.ModelViewSet):
 
 @extend_schema(tags=['Comments - Client Collections'])
 class ClientCollectionCommentViewSet(viewsets.ModelViewSet):
-    queryset = ClientCollectionComment.objects.all()
+    queryset = ClientCollectionComment.objects.all().order_by('-comment_date')
     permission_classes = [IsAuthenticated]
     pagination_class = CommentPagination
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
@@ -112,7 +112,7 @@ class ProviderCollectionCommentViewSet(viewsets.ModelViewSet):
         # Check if user is a Client by looking for Client instance
         try:
             Client.objects.get(user_ptr=user)
-            return ProviderCollectionComment.objects.select_related('collection', 'client')
+            return ProviderCollectionComment.objects.select_related('collection', 'client').order_by('-comment_date')
         except Client.DoesNotExist:
             pass
 
@@ -120,7 +120,7 @@ class ProviderCollectionCommentViewSet(viewsets.ModelViewSet):
         try:
             Provider.objects.get(user_ptr=user)
             # Provider can only see comments on their own collections
-            return ProviderCollectionComment.objects.filter(collection__provider=user).select_related('collection', 'client')
+            return ProviderCollectionComment.objects.filter(collection__provider=user).select_related('collection', 'client').order_by('-comment_date')
         except Provider.DoesNotExist:
             pass
 
