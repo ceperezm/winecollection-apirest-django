@@ -5,6 +5,7 @@ from .permissions import CanViewComment
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, serializers
 import django_filters.rest_framework
+from rest_framework import filters
 from wine_collection_api.pagination import CommentPagination
 from drf_spectacular.utils import extend_schema
 
@@ -19,8 +20,10 @@ ProviderCollectionReadCommentSerializer, ProviderCollectionWriteCommentSerialize
 @extend_schema(tags=['Comments - Wines'])
 class WineCommentViewSet(viewsets.ModelViewSet):
     pagination_class = CommentPagination
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['wine']
+    search_fields = ['wine__name']
+    ordering_fields = ['comment_date']
 
     def get_queryset(self):
         user = self.request.user
@@ -31,14 +34,14 @@ class WineCommentViewSet(viewsets.ModelViewSet):
         # Check if user is a Client by looking for Client instance
         try:
             Client.objects.get(user_ptr=user)
-            return WineComment.objects.select_related('wine', 'client')
+            return WineComment.objects.select_related('wine', 'client').order_by('-comment_date')
         except Client.DoesNotExist:
             pass
 
         # Check if user is a Provider by looking for Provider instance
         try:
             Provider.objects.get(user_ptr=user)
-            return WineComment.objects.filter(wine__provider=user).select_related('wine', 'client')
+            return WineComment.objects.filter(wine__provider=user).select_related('wine', 'client').order_by('-comment_date')
         except Provider.DoesNotExist:
             pass
 
@@ -69,11 +72,13 @@ class WineCommentViewSet(viewsets.ModelViewSet):
 
 @extend_schema(tags=['Comments - Client Collections'])
 class ClientCollectionCommentViewSet(viewsets.ModelViewSet):
-    queryset = ClientCollectionComment.objects.all()
+    queryset = ClientCollectionComment.objects.all().order_by('-comment_date')
     permission_classes = [IsAuthenticated]
     pagination_class = CommentPagination
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['collection']
+    search_fields = ['collection__collection_name']
+    ordering_fields = ['comment_date']
 
     def get_permissions(self):
         """
@@ -100,8 +105,10 @@ class ClientCollectionCommentViewSet(viewsets.ModelViewSet):
 class ProviderCollectionCommentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = CommentPagination
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['collection']
+    search_fields = ['collection__collection_name']
+    ordering_fields = ['comment_date']
 
     def get_queryset(self):
         user = self.request.user
@@ -112,7 +119,7 @@ class ProviderCollectionCommentViewSet(viewsets.ModelViewSet):
         # Check if user is a Client by looking for Client instance
         try:
             Client.objects.get(user_ptr=user)
-            return ProviderCollectionComment.objects.select_related('collection', 'client')
+            return ProviderCollectionComment.objects.select_related('collection', 'client').order_by('-comment_date')
         except Client.DoesNotExist:
             pass
 
@@ -120,7 +127,7 @@ class ProviderCollectionCommentViewSet(viewsets.ModelViewSet):
         try:
             Provider.objects.get(user_ptr=user)
             # Provider can only see comments on their own collections
-            return ProviderCollectionComment.objects.filter(collection__provider=user).select_related('collection', 'client')
+            return ProviderCollectionComment.objects.filter(collection__provider=user).select_related('collection', 'client').order_by('-comment_date')
         except Provider.DoesNotExist:
             pass
 
@@ -144,3 +151,4 @@ class ProviderCollectionCommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Serializer now handles User to Client conversion
         serializer.save()
+

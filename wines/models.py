@@ -1,4 +1,5 @@
 
+from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import datetime
@@ -14,15 +15,15 @@ class Attribute(models.Model):
         help_text='Total sulfur dioxide (0-300 mg/L)'
     )
     fixed_acidity = models.DecimalField(
-        max_digits=4, 
+        max_digits=4,
         decimal_places=2,
-        validators=[MinValueValidator(5.0), MaxValueValidator(20.0)],
+        validators=[MinValueValidator(Decimal('5.0')), MaxValueValidator(Decimal('20.0'))],
         help_text='Fixed acidity (5.0-20.0 g/L)'
     )
     volatile_acidity = models.DecimalField(
-        max_digits=4, 
+        max_digits=4,
         decimal_places=2,
-        validators=[MinValueValidator(0.1), MaxValueValidator(2.0)],
+        validators=[MinValueValidator(Decimal('0.1')), MaxValueValidator(Decimal('2.0'))],
         help_text='Volatile acidity (0.1-2.0 g/L)'
     )
     free_sulfur_dioxide = models.SmallIntegerField(
@@ -30,45 +31,45 @@ class Attribute(models.Model):
         help_text='Free sulfur dioxide (1-80 mg/L)'
     )
     citric_acid = models.DecimalField(
-        max_digits=4, 
+        max_digits=4,
         decimal_places=3,
-        validators=[MinValueValidator(0.0), MaxValueValidator(10.0)],
+        validators=[MinValueValidator(Decimal('0.0')), MaxValueValidator(Decimal('10.0'))],
         help_text='Citric acid (0.0-10.0 g/L)'
     )
     residual_sugar = models.DecimalField(
-        max_digits=5, 
+        max_digits=5,
         decimal_places=2,
-        validators=[MinValueValidator(0.5), MaxValueValidator(15.0)],
+        validators=[MinValueValidator(Decimal('0.5')), MaxValueValidator(Decimal('15.0'))],
         help_text='Residual sugar (0.5-15.0 g/L)'
     )
     chlorides = models.DecimalField(
-        max_digits=5, 
+        max_digits=5,
         decimal_places=4,
-        validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
+        validators=[MinValueValidator(Decimal('0.0')), MaxValueValidator(Decimal('1.0'))],
         help_text='Chlorides (0.0-1.0 g/L)'
     )
     density = models.DecimalField(
-        max_digits=7, 
+        max_digits=7,
         decimal_places=5,
-        validators=[MinValueValidator(0.9900), MaxValueValidator(1.0100)],
+        validators=[MinValueValidator(Decimal('0.99000')), MaxValueValidator(Decimal('1.01000'))],
         help_text='Density (0.9900-1.0100 g/cm³)'
     )
     pH = models.DecimalField(
-        max_digits=3, 
+        max_digits=3,
         decimal_places=2,
-        validators=[MinValueValidator(2.0), MaxValueValidator(5.0)],
+        validators=[MinValueValidator(Decimal('2.0')), MaxValueValidator(Decimal('5.0'))],
         help_text='pH (2.0-5.0)'
     )
     sulphates = models.DecimalField(
-        max_digits=4, 
+        max_digits=4,
         decimal_places=2,
-        validators=[MinValueValidator(0.0), MaxValueValidator(2.0)],
+        validators=[MinValueValidator(Decimal('0.0')), MaxValueValidator(Decimal('2.0'))],
         help_text='Sulphates(0.0-2.0 g/L)'
     )
     alcohol = models.DecimalField(
-        max_digits=4, 
+        max_digits=4,
         decimal_places=2,
-        validators=[MinValueValidator(5.0), MaxValueValidator(20.0)],
+        validators=[MinValueValidator(Decimal('5.0')), MaxValueValidator(Decimal('20.0'))],
         help_text='Alcohol (5.0-20.0 %vol)'
     )
     

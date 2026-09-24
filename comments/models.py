@@ -19,13 +19,16 @@ class WineComment(models.Model): # For clients comments any wine
     comment = models.TextField(max_length=250)
     comment_date = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-comment_date']
+
     def __str__(self):
         return f"Comment by {self.client.username} on {self.wine.name}"
 
 class ClientCollectionComment(models.Model): # For clients comments Other client collections
     """Model to store comments for collections."""
     client = models.ForeignKey(
-        Client, 
+        Client,
         on_delete=models.CASCADE,
         null=True,
         blank=True
@@ -37,14 +40,17 @@ class ClientCollectionComment(models.Model): # For clients comments Other client
 
     comment = models.TextField(max_length=250)
     comment_date = models.DateTimeField(auto_now_add=True)
-    
+
+    class Meta:
+        ordering = ['-comment_date']
+
     def __str__(self):
         return f"Comment by {self.client.username} on {self.collection.collection_name}"
 
 class ProviderCollectionComment(models.Model): # For clients comments on provider collections
     """Model to store comments for provider collections."""
     client = models.ForeignKey(
-        Client, 
+        Client,
         on_delete=models.CASCADE,
         null=True,
         blank=True
@@ -56,6 +62,9 @@ class ProviderCollectionComment(models.Model): # For clients comments on provide
 
     comment = models.TextField(max_length=250)
     comment_date = models.DateTimeField(auto_now_add=True)
-    
+
+    class Meta:
+        ordering = ['-comment_date']
+
     def __str__(self):
-        return f"Comment by {self.client.username} on {self.collection.collection_name}"
+        return f"Comment by {self.client.username} on {self.collection.collection_name}"

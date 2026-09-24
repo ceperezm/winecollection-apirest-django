@@ -1,12 +1,15 @@
-from rest_framework import serializers
+﻿from rest_framework import serializers
 from .models import WineComment, ClientCollectionComment, ProviderCollectionComment
 from users.models import Client
+from coltns.models import ClientCollectionWine, ProviderCollectionWine
 
 class WineCommentReadSerializer(serializers.ModelSerializer):
     """Serializer for reading wine comments."""
 
     client = serializers.SlugRelatedField(slug_field='username', read_only=True)
     wine = serializers.SlugRelatedField(slug_field='name', read_only=True)
+    wine_id = serializers.IntegerField(source='wine.id', read_only=True)
+
     class Meta:
         model = WineComment
         
@@ -14,6 +17,7 @@ class WineCommentReadSerializer(serializers.ModelSerializer):
             'id', # Primary key
             'client', # Who made the comment
             'wine', # Foreign key to Wine
+            'wine_id',
             'comment', # Comment text
             'comment_date', # Comment date
         ]
@@ -97,10 +101,14 @@ class ClientCollectionWriteCommentSerializer(serializers.ModelSerializer):
                 "Client cannot comment on their own collection."
             )
             
-        # Solo permitir un comentario por colección por cliente (en la creación)
+        # Solo permitir un comentario por colecciÃ³n por cliente (en la creaciÃ³n)
         if not self.instance and collection:
             if ClientCollectionComment.objects.filter(client__user_ptr=user, collection=collection).exists():
                 raise serializers.ValidationError("You have already commented on this collection.")
+                
+            wine_count = ClientCollectionWine.objects.filter(client_collection=collection).count()
+            if wine_count < 5:
+                raise serializers.ValidationError("La coleccion debe tener al menos 5 vinos para poder ser comentada.")
                 
         return data
     
@@ -119,6 +127,7 @@ class ProviderCollectionReadCommentSerializer(serializers.ModelSerializer):
 
     client = serializers.SlugRelatedField(slug_field='username', read_only=True)
     collection = serializers.SlugRelatedField(slug_field='collection_name', read_only=True)
+    collection_id = serializers.IntegerField(source='collection.id', read_only=True)
 
     class Meta:
         model = ProviderCollectionComment
@@ -127,6 +136,7 @@ class ProviderCollectionReadCommentSerializer(serializers.ModelSerializer):
             'id',
             'client',
             'collection',
+            'collection_id',
             'comment',
             'comment_date',
         ]
@@ -149,10 +159,14 @@ class ProviderCollectionWriteCommentSerializer(serializers.ModelSerializer):
         user = request.user
         collection = data.get('collection')
         
-        # Un cliente solo puede dejar un comentario por colección (al momento de creación)
+        # Un cliente solo puede dejar un comentario por colecciÃ³n (al momento de creaciÃ³n)
         if not self.instance and collection:
             if ProviderCollectionComment.objects.filter(client__user_ptr=user, collection=collection).exists():
                 raise serializers.ValidationError("You have already commented on this collection.")
+                
+            wine_count = ProviderCollectionWine.objects.filter(provider_collection=collection).count()
+            if wine_count < 5:
+                raise serializers.ValidationError("La coleccion debe tener al menos 5 vinos para poder ser comentada.")
                 
         return data
     
@@ -165,3 +179,5 @@ class ProviderCollectionWriteCommentSerializer(serializers.ModelSerializer):
         # Create comment with the correct client instance
         validated_data['client'] = client_instance
         return super().create(validated_data)
+
+
